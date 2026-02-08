@@ -7,5 +7,5 @@ with native math equations and syntax-highlighted code.
 
 from markdocx.core import convert_file, convert_directory
 
-__version__ = "0.1.0"
+__version__ = "2.0.0"
 __all__ = ["convert_file", "convert_directory"]

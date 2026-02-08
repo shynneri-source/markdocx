@@ -1,6 +1,6 @@
 [project]
 name = "markdocx"
-version = "1"
+version = "2.0.0"
 description = "Convert AI-generated Markdown textbooks to polished DOCX with native math equations and syntax-highlighted code"
 readme = "README.md"
 license = "MIT"

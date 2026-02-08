@@ -1,11 +1,12 @@
 <div align="center">
 
-# MD to DOCX
+# markdocx
 
 **A Markdown-to-Word converter built for AI-generated textbooks**
 
 Convert Markdown files — complete with LaTeX math, syntax-highlighted code, tables, and images — into polished `.docx` documents in one command.
 
+[![PyPI](https://img.shields.io/pypi/v/markdocx.svg)](https://pypi.org/project/markdocx/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -21,7 +22,7 @@ Large language models (ChatGPT, Claude, Gemini, …) produce great Markdown, but
 - Code blocks lose their highlighting
 - Tables, lists, and blockquotes need manual reformatting
 
-**MD to DOCX** bridges that gap. Feed it a Markdown file that follows a few simple rules and get a publication-ready `.docx` — math rendered as native Word OMML equations, code with VS Code–style colors, and everything else properly formatted.
+**markdocx** bridges that gap. Feed it a Markdown file that follows a few simple rules and get a publication-ready `.docx` — math rendered as native Word OMML equations, code with VS Code–style colors, and everything else properly formatted.
 
 ## Features
 
@@ -38,30 +39,53 @@ Large language models (ChatGPT, Claude, Gemini, …) produce great Markdown, but
 ### Installation
 
 ```bash
-git clone https://github.com/shynerri-source/markdocx.git
-cd markdocx
 # Using uv (recommended)
-uv sync
+uv add markdocx
 
 # Or using pip
-pip install -r requirements.txt
+pip install markdocx
 ```
+
+<details>
+<summary>Install from source (for development)</summary>
+
+```bash
+git clone https://github.com/shynerri-source/markdocx.git
+cd markdocx
+uv sync        # or: pip install -e .
+```
+
+</details>
 
 ### Usage
 
+#### CLI
+
 ```bash
 # Convert a single file
-python main.py input.md
-python main.py input.md -o output.docx
+markdocx input.md
+markdocx input.md -o output.docx
 
 # Convert an entire directory
-python main.py ./chapters/ -o ./output/
+markdocx ./chapters/ -o ./output/
 
 # Recursively search subdirectories
-python main.py ./chapters/ -o ./output/ -r
+markdocx ./chapters/ -o ./output/ -r
 
 # Verbose logging
-python main.py input.md -v
+markdocx input.md -v
+```
+
+#### Python API
+
+```python
+from markdocx import convert_file, convert_directory
+
+# Single file
+convert_file("input.md", "output.docx")
+
+# Entire directory
+results = convert_directory("./chapters/", output_dir="./output/", recursive=True)
 ```
 
 ### CLI Options
@@ -108,18 +132,19 @@ Source code → Pygments lexer + VS Code theme → colored Word runs inside a sh
 ## Project Structure
 
 ```
-md_to_docx/
-├── main.py                  # CLI entry point
+markdocx/
+├── main.py                  # Convenience entry point
 ├── pyproject.toml           # Project metadata & dependencies
-├── requirements.txt         # Pip-compatible dependency list
-├── converter/
-│   ├── __init__.py
-│   ├── core.py              # Top-level orchestrator
-│   ├── md_parser.py         # Markdown → token stream
-│   ├── math_renderer.py     # LaTeX → OMML (native Word math)
-│   ├── code_renderer.py     # Code → syntax-highlighted Word runs
-│   ├── docx_builder.py      # Token stream → DOCX elements
-│   └── styles.py            # Fonts, colors, and layout presets
+├── src/
+│   └── markdocx/            # Installable package
+│       ├── __init__.py      # Public API (convert_file, convert_directory)
+│       ├── cli.py           # CLI entry point (markdocx command)
+│       ├── core.py          # Top-level orchestrator
+│       ├── md_parser.py     # Markdown → token stream
+│       ├── math_renderer.py # LaTeX → OMML (native Word math)
+│       ├── code_renderer.py # Code → syntax-highlighted Word runs
+│       ├── docx_builder.py  # Token stream → DOCX elements
+│       └── styles.py        # Fonts, colors, and layout presets
 └── rule/
     ├── ai_gen_doc_rule.md      # AI writing rules (Vietnamese)
     └── ai_gen_doc_rule_en.md   # AI writing rules (English)
