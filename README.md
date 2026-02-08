@@ -38,9 +38,8 @@ Large language models (ChatGPT, Claude, Gemini, …) produce great Markdown, but
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/md_to_docx.git
-cd md_to_docx
-
+git clone https://github.com/shynerri-source/markdocx.git
+cd markdocx
 # Using uv (recommended)
 uv sync
 
