@@ -1,0 +1,11 @@
+# MD to DOCX Converter - Dependencies
+# Latest versions as of 2026-02-08
+
+python-docx==1.2.0
+markdown-it-py==4.0.0
+mdit-py-plugins==0.5.0
+matplotlib==3.10.8
+Pillow==12.1.0
+Pygments==2.19.2
+latex2mathml==3.78.1
+lxml==6.0.2
