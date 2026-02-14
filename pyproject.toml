@@ -1,6 +1,6 @@
 [project]
 name = "markdocx"
-version = "2.0.0"
+version = "9.0.0"
 description = "Convert AI-generated Markdown textbooks to polished DOCX with native math equations and syntax-highlighted code"
 readme = "README.md"
 license = "MIT"
@@ -11,6 +11,7 @@ dependencies = [
     "markdown-it-py==4.0.0",
     "matplotlib==3.10.8",
     "mdit-py-plugins==0.5.0",
+    "networkx>=3.6.1",
     "pillow==12.1.0",
     "pygments==2.19.2",
     "python-docx==1.2.0",

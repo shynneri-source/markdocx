@@ -22,7 +22,7 @@ Large language models (ChatGPT, Claude, Gemini, …) produce great Markdown, but
 - Code blocks lose their highlighting
 - Tables, lists, and blockquotes need manual reformatting
 
-**markdocx** bridges that gap. Feed it a Markdown file that follows a few simple rules and get a publication-ready `.docx` — math rendered as native Word OMML equations, code with VS Code–style colors, and everything else properly formatted.
+**markdocx** bridges that gap. Feed it a Markdown file that follows a few simple rules and get a publication-ready `.docx` — math rendered as native Word OMML equations, code with VS Code–style colors, diagrams rendered as images, and everything else properly formatted.
 
 ## Features
 
@@ -32,6 +32,10 @@ Large language models (ChatGPT, Claude, Gemini, …) produce great Markdown, but
 | **Code** | 30+ languages with Pygments syntax highlighting, VS Code light theme, language labels |
 | **Tables** | Auto-formatted Table Grid — bold header row, left/center/right alignment, inline math in cells |
 | **Lists** | Bullet (•◦▪) and numbered lists, up to 6 nesting levels |
+| **Matrix** | `\`\`\`matrix` blocks → visual matrix diagrams with brackets, labels, and captions |
+| **Charts** | `\`\`\`chart` blocks → bar, line, pie, and scatter charts via matplotlib |
+| **Graphs** | `\`\`\`graph` blocks → network/graph diagrams with weighted edges via networkx |
+| **Workflows** | `\`\`\`workflow` blocks → flowcharts with decision diamonds, process boxes, and arrows |
 | **Other** | Blockquotes, horizontal rules, clickable hyperlinks, local images, footnotes |
 
 ## Quick Start
@@ -107,9 +111,10 @@ Markdown file
      │
      ▼
  docx_builder.py     ─── walks the token stream, builds Word elements
-     ├── math_renderer.py   ─── LaTeX → MathML → OMML (native Word equations)
-     ├── code_renderer.py   ─── Pygments lexer → colored Word runs
-     └── styles.py          ─── fonts, colors, spacing presets
+     ├── math_renderer.py      ─── LaTeX → MathML → OMML (native Word equations)
+     ├── code_renderer.py      ─── Pygments lexer → colored Word runs
+     ├── diagram_renderer.py   ─── matrix / chart / graph / workflow → PNG images
+     └── styles.py             ─── fonts, colors, spacing presets
      │
      ▼
   .docx file          ─── python-docx output
@@ -129,6 +134,55 @@ LaTeX string → latex2mathml → MathML → XSLT → OMML → Word paragraph
 Source code → Pygments lexer + VS Code theme → colored Word runs inside a shaded table cell
 ```
 
+### Diagram Pipeline
+
+Fenced code blocks with special language identifiers (`matrix`, `chart`, `graph`, `workflow`) are rendered as PNG images via matplotlib/networkx and embedded in the document.
+
+````markdown
+```matrix
+name: A
+1 2 3
+4 5 6
+7 8 9
+caption: Matrix A (3×3)
+```
+
+```chart
+type: bar
+title: Algorithm Performance
+labels: Bubble Sort, Merge Sort, Quick Sort
+Time (ms): 450, 38, 35
+caption: Figure 1: Sorting comparison
+```
+
+```graph
+directed: true
+title: Shortest Path
+A -> B: 5
+B -> C: 3
+A -> C: 7
+caption: Figure 2: Weighted directed graph
+```
+
+```workflow
+title: Login Process
+[Start]
+<User Input>
+(Validate Credentials)
+{Valid?}
+(Grant Access)
+[End]
+caption: Figure 3: Authentication workflow
+```
+````
+
+| Block type | Formats | Rendered via |
+|:-----------|:--------|:-------------|
+| `matrix` | Simple text or JSON | matplotlib |
+| `chart` | Simple key-value or JSON — bar, line, pie, scatter | matplotlib |
+| `graph` | Edge list (`A -> B: 5`) or JSON — directed/undirected | matplotlib + networkx |
+| `workflow` | Step notation (`[Start]`, `(Process)`, `{Decision}`, `<I/O>`) or JSON | matplotlib |
+
 ## Project Structure
 
 ```
@@ -141,10 +195,11 @@ markdocx/
 │       ├── cli.py           # CLI entry point (markdocx command)
 │       ├── core.py          # Top-level orchestrator
 │       ├── md_parser.py     # Markdown → token stream
-│       ├── math_renderer.py # LaTeX → OMML (native Word math)
-│       ├── code_renderer.py # Code → syntax-highlighted Word runs
-│       ├── docx_builder.py  # Token stream → DOCX elements
-│       └── styles.py        # Fonts, colors, and layout presets
+│       ├── math_renderer.py    # LaTeX → OMML (native Word math)
+│       ├── code_renderer.py    # Code → syntax-highlighted Word runs
+│       ├── diagram_renderer.py # Matrix / Chart / Graph / Workflow → PNG
+│       ├── docx_builder.py     # Token stream → DOCX elements
+│       └── styles.py           # Fonts, colors, and layout presets
 └── rule/
     ├── ai_gen_doc_rule.md      # AI writing rules (Vietnamese)
     └── ai_gen_doc_rule_en.md   # AI writing rules (English)
@@ -160,8 +215,9 @@ markdocx/
 | [latex2mathml](https://github.com/roniemartinez/latex2mathml) | 3.78.1 | LaTeX → MathML conversion |
 | [lxml](https://lxml.de/) | 6.0.2 | XML/XSLT processing |
 | [Pygments](https://pygments.org/) | 2.19.2 | Syntax highlighting |
-| [matplotlib](https://matplotlib.org/) | 3.10.8 | LaTeX rendering (fallback) |
+| [matplotlib](https://matplotlib.org/) | 3.10.8 | Chart, matrix, workflow rendering |
 | [Pillow](https://python-pillow.org/) | 12.1.0 | Image processing |
+| [networkx](https://networkx.org/) | 3.4+ | Graph/network diagram layouts |
 
 ## AI Writing Rules
 

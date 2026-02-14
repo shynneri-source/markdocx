@@ -460,7 +460,258 @@ $$\int_a^b f(x) \, dx = F(b) - F(a)$$
 
 ---
 
-## 11. PRE-EXPORT CHECKLIST
+## 12. MATRIX DIAGRAMS
+
+### 12.1 Matrix Syntax
+
+Use fenced code blocks with the language `matrix` to render visual matrix diagrams.
+
+**Simple format:**
+
+````markdown
+```matrix
+name: A
+1 2 3
+4 5 6
+7 8 9
+caption: Matrix A (3×3)
+```
+````
+
+**JSON format:**
+
+````markdown
+```matrix
+{"name": "B", "data": [[1, 0], [0, 1]], "caption": "Identity Matrix"}
+```
+````
+
+### 12.2 Matrix Rules
+
+- Use **space** or **comma** separated values for rows
+- Optional `name:` directive adds a label like *A =* before the matrix
+- Optional `caption:` adds a centered caption below
+- Rows are automatically padded to equal length
+- Both numeric and text values are supported
+
+---
+
+## 13. CHARTS
+
+### 13.1 Chart Syntax
+
+Use fenced code blocks with the language `chart` to render charts.
+
+**Simple format:**
+
+````markdown
+```chart
+type: bar
+title: Algorithm Performance
+xlabel: Algorithm
+ylabel: Time (ms)
+labels: Bubble Sort, Merge Sort, Quick Sort, Heap Sort
+Random: 450, 38, 35, 42
+Sorted: 120, 35, 30, 38
+caption: Figure 1: Sorting algorithm comparison
+```
+````
+
+**JSON format:**
+
+````markdown
+```chart
+{
+    "type": "pie",
+    "title": "Market Share",
+    "data": {
+        "labels": ["Chrome", "Firefox", "Safari", "Edge"],
+        "datasets": [{"label": "Share", "values": [65, 10, 15, 10]}]
+    },
+    "caption": "Figure 2: Browser market share"
+}
+```
+````
+
+### 13.2 Supported Chart Types
+
+| Type | Identifier | Description |
+|------|-----------|-------------|
+| Bar chart | `bar` | Vertical bars (default) |
+| Line chart | `line` | Lines with markers |
+| Pie chart | `pie` | Circular proportions |
+| Scatter plot | `scatter` | Point distribution |
+
+### 13.3 Chart Rules
+
+- Always specify `type:` (defaults to `bar` if omitted)
+- `labels:` defines the x-axis categories (comma-separated)
+- Each additional `Name: values` line defines a data series
+- Multiple datasets are supported for bar, line, and scatter charts
+- Pie charts use only the first dataset
+- Use `title:`, `xlabel:`, `ylabel:`, and `caption:` for labeling
+
+---
+
+## 14. GRAPHS (Network Diagrams)
+
+### 14.1 Graph Syntax
+
+Use fenced code blocks with the language `graph` to render network/graph diagrams.
+
+**Simple edge-list format:**
+
+````markdown
+```graph
+title: Binary Tree
+A -> B
+A -> C
+B -> D
+B -> E
+caption: Figure 3: A simple binary tree
+```
+````
+
+**Weighted graph:**
+
+````markdown
+```graph
+directed: true
+title: Shortest Path
+A -> B: 5
+A -> C: 3
+B -> D: 2
+C -> D: 7
+C -> E: 1
+D -> E: 4
+caption: Figure 4: Weighted directed graph
+```
+````
+
+**Undirected graph:**
+
+````markdown
+```graph
+title: Social Network
+Alice -- Bob
+Bob -- Charlie
+Alice -- Charlie
+Charlie -- David
+caption: Figure 5: Friend connections
+```
+````
+
+**JSON format:**
+
+````markdown
+```graph
+{
+    "directed": true,
+    "title": "State Machine",
+    "nodes": ["S0", "S1", "S2"],
+    "edges": [
+        {"from": "S0", "to": "S1", "label": "a"},
+        {"from": "S1", "to": "S2", "label": "b"},
+        {"from": "S2", "to": "S0", "label": "c"}
+    ],
+    "caption": "Figure 6: Finite automaton"
+}
+```
+````
+
+### 14.2 Graph Rules
+
+- Use `->` or `-->` for directed edges (auto-sets `directed: true`)
+- Use `--` for undirected edges
+- Add edge weights/labels after `:` — e.g., `A -> B: 5`
+- Nodes are auto-discovered from edges; use `nodes:` to add isolated nodes
+- Use `title:` and `caption:` for labeling
+
+---
+
+## 15. WORKFLOW (Flowcharts)
+
+### 15.1 Workflow Syntax
+
+Use fenced code blocks with the language `workflow` to render flowcharts.
+
+**Simple format:**
+
+````markdown
+```workflow
+title: Login Process
+[Start]
+<User Input>
+(Validate Credentials)
+{Valid?}
+(Grant Access)
+[End]
+caption: Figure 7: Authentication workflow
+```
+````
+
+**Horizontal layout:**
+
+````markdown
+```workflow
+title: Data Pipeline
+direction: horizontal
+[Start]
+<Read Data>
+(Transform)
+(Validate)
+(Save)
+[End]
+caption: Figure 8: ETL pipeline
+```
+````
+
+### 15.2 Step Notation
+
+| Notation | Shape | Usage |
+|----------|-------|-------|
+| `[text]` | Rounded box (green) | Start / End |
+| `(text)` | Rectangle (blue) | Process step |
+| `{text}` | Diamond (yellow) | Decision |
+| `<text>` | Parallelogram (purple) | Input / Output |
+
+### 15.3 JSON Format
+
+````markdown
+```workflow
+{
+    "title": "Order Processing",
+    "direction": "vertical",
+    "steps": [
+        {"text": "Start", "type": "terminal"},
+        {"text": "Receive Order", "type": "io"},
+        {"text": "Process Payment", "type": "process"},
+        {"text": "Payment OK?", "type": "decision"},
+        {"text": "Ship Order", "type": "process"},
+        {"text": "End", "type": "terminal"}
+    ],
+    "caption": "Figure 9: Order workflow"
+}
+```
+````
+
+### 15.4 Workflow Rules
+
+- Steps are connected sequentially with arrows (top-to-bottom or left-to-right)
+- Use `direction: horizontal` or `direction: vertical` (default)
+- `[Start]` and `[End]` are recommended for the first and last steps
+- Keep workflows to **8 steps or fewer** for readability
+- Use `title:` and `caption:` for labeling
+- **Keep each step label short — max 10-12 characters** (e.g., `Read Data`, `Transform`)
+- Text longer than 10 characters will automatically wrap to 2 lines
+- **Horizontal layout (`horizontal`):** use **very short** step labels (2-3 words max)
+  - ✅ Correct: `(Read Data)`, `(Transform)`, `(Classify)`
+  - ❌ Wrong: `(Read and preprocess input images)`, `(Extract features from data)`
+- **Vertical layout (`vertical`):** may use longer labels (up to 25-30 characters)
+
+---
+
+## 16. PRE-EXPORT CHECKLIST
 
 Before finalizing a Markdown file, verify:
 
@@ -474,3 +725,7 @@ Before finalizing a Markdown file, verify:
 - [ ] Blank lines before/after: headings, code blocks, tables, lists, blockquotes
 - [ ] No raw HTML (except `<br>`)
 - [ ] No unsupported LaTeX commands (see Section 2.5)
+- [ ] Matrix blocks use `matrix` language with correct data format
+- [ ] Chart blocks use `chart` language with `type:` specified
+- [ ] Graph blocks use `graph` language with valid edge notation
+- [ ] Workflow blocks use `workflow` language with proper step notation

@@ -461,7 +461,220 @@ $$\int_a^b f(x) \, dx = F(b) - F(a)$$
 
 ---
 
-## 11. CHECKLIST TRƯỚC KHI XUẤT
+## 12. SƠ ĐỒ MA TRẬN (MATRIX)
+
+### 12.1 Cú Pháp Ma Trận
+
+Dùng code block với ngôn ngữ `matrix` để vẽ sơ đồ ma trận trực quan.
+
+**Định dạng đơn giản:**
+
+````markdown
+```matrix
+name: A
+1 2 3
+4 5 6
+7 8 9
+caption: Ma trận A (3×3)
+```
+````
+
+**Định dạng JSON:**
+
+````markdown
+```matrix
+{"name": "B", "data": [[1, 0], [0, 1]], "caption": "Ma trận đơn vị"}
+```
+````
+
+### 12.2 Quy Tắc Ma Trận
+
+- Dùng **dấu cách** hoặc **dấu phẩy** để ngăn cách các giá trị trên mỗi hàng
+- `name:` (tùy chọn) thêm nhãn như *A =* trước ma trận
+- `caption:` (tùy chọn) thêm chú thích bên dưới
+- Các hàng tự động được căn chỉnh cùng độ dài
+- Hỗ trợ cả giá trị số và chữ
+
+---
+
+## 13. BIỂU ĐỒ (CHART)
+
+### 13.1 Cú Pháp Biểu Đồ
+
+Dùng code block với ngôn ngữ `chart` để vẽ biểu đồ.
+
+**Định dạng đơn giản:**
+
+````markdown
+```chart
+type: bar
+title: Hiệu suất thuật toán
+xlabel: Thuật toán
+ylabel: Thời gian (ms)
+labels: Bubble Sort, Merge Sort, Quick Sort, Heap Sort
+Ngẫu nhiên: 450, 38, 35, 42
+Đã sắp xếp: 120, 35, 30, 38
+caption: Hình 1: So sánh thuật toán sắp xếp
+```
+````
+
+**Định dạng JSON:**
+
+````markdown
+```chart
+{
+    "type": "pie",
+    "title": "Thị phần",
+    "data": {
+        "labels": ["Chrome", "Firefox", "Safari", "Edge"],
+        "datasets": [{"label": "Phần trăm", "values": [65, 10, 15, 10]}]
+    },
+    "caption": "Hình 2: Thị phần trình duyệt"
+}
+```
+````
+
+### 13.2 Các Loại Biểu Đồ Hỗ Trợ
+
+| Loại | Từ khóa | Mô tả |
+|------|---------|-------|
+| Biểu đồ cột | `bar` | Cột dọc (mặc định) |
+| Biểu đồ đường | `line` | Đường nối với điểm đánh dấu |
+| Biểu đồ tròn | `pie` | Tỉ lệ phần trăm hình tròn |
+| Biểu đồ phân tán | `scatter` | Phân bố điểm |
+
+### 13.3 Quy Tắc Biểu Đồ
+
+- Luôn chỉ định `type:` (mặc định là `bar` nếu bỏ qua)
+- `labels:` định nghĩa danh mục trục x (ngăn cách bằng dấu phẩy)
+- Mỗi dòng `Tên: giá trị` thêm một chuỗi dữ liệu
+- Hỗ trợ nhiều chuỗi dữ liệu cho bar, line, scatter
+- Biểu đồ tròn chỉ dùng chuỗi dữ liệu đầu tiên
+- Dùng `title:`, `xlabel:`, `ylabel:`, `caption:` để đặt nhãn
+
+---
+
+## 14. ĐỒ THỊ (GRAPH)
+
+### 14.1 Cú Pháp Đồ Thị
+
+Dùng code block với ngôn ngữ `graph` để vẽ sơ đồ đồ thị/mạng.
+
+**Định dạng danh sách cạnh:**
+
+````markdown
+```graph
+title: Cây nhị phân
+A -> B
+A -> C
+B -> D
+B -> E
+caption: Hình 3: Cây nhị phân đơn giản
+```
+````
+
+**Đồ thị có trọng số:**
+
+````markdown
+```graph
+directed: true
+title: Đường đi ngắn nhất
+A -> B: 5
+A -> C: 3
+B -> D: 2
+C -> D: 7
+C -> E: 1
+D -> E: 4
+caption: Hình 4: Đồ thị có hướng có trọng số
+```
+````
+
+**Đồ thị vô hướng:**
+
+````markdown
+```graph
+title: Mạng xã hội
+Alice -- Bob
+Bob -- Charlie
+Alice -- Charlie
+Charlie -- David
+caption: Hình 5: Kết nối bạn bè
+```
+````
+
+### 14.2 Quy Tắc Đồ Thị
+
+- Dùng `->` hoặc `-->` cho cạnh có hướng (tự động bật `directed: true`)
+- Dùng `--` cho cạnh vô hướng
+- Thêm trọng số/nhãn cạnh sau `:` — ví dụ: `A -> B: 5`
+- Các đỉnh tự động phát hiện từ cạnh; dùng `nodes:` để thêm đỉnh cô lập
+- Dùng `title:` và `caption:` để đặt nhãn
+
+---
+
+## 15. QUY TRÌNH (WORKFLOW)
+
+### 15.1 Cú Pháp Quy Trình
+
+Dùng code block với ngôn ngữ `workflow` để vẽ lưu đồ quy trình.
+
+**Định dạng đơn giản:**
+
+````markdown
+```workflow
+title: Quy trình đăng nhập
+[Bắt đầu]
+<Nhập liệu>
+(Xác thực thông tin)
+{Hợp lệ?}
+(Cấp quyền truy cập)
+[Kết thúc]
+caption: Hình 7: Quy trình xác thực
+```
+````
+
+**Bố cục ngang:**
+
+````markdown
+```workflow
+title: Đường ống dữ liệu
+direction: horizontal
+[Bắt đầu]
+<Đọc dữ liệu>
+(Chuyển đổi)
+(Xác thực)
+(Lưu trữ)
+[Kết thúc]
+caption: Hình 8: Quy trình ETL
+```
+````
+
+### 15.2 Ký Hiệu Bước
+
+| Ký hiệu | Hình dạng | Công dụng |
+|----------|-----------|----------|
+| `[text]` | Hộp bo tròn (xanh lá) | Bắt đầu / Kết thúc |
+| `(text)` | Hình chữ nhật (xanh dương) | Bước xử lý |
+| `{text}` | Hình thoi (vàng) | Quyết định |
+| `<text>` | Hình bình hành (tím) | Đầu vào / Đầu ra |
+
+### 15.3 Quy Tắc Quy Trình
+
+- Các bước được nối tuần tự bằng mũi tên (trên xuống dưới hoặc trái sang phải)
+- Dùng `direction: horizontal` hoặc `direction: vertical` (mặc định)
+- Khuyến nghị dùng `[Bắt đầu]` và `[Kết thúc]` cho bước đầu và cuối
+- Giữ quy trình tối đa **8 bước** để dễ đọc
+- Dùng `title:` và `caption:` để đặt nhãn
+- **Mỗi bước viết ngắn gọn, tối đa 10-12 ký tự** (ví dụ: `Thu nhận ảnh`, `Xử lý ảnh`)
+- Nếu tên bước dài hơn 10 ký tự, hệ thống sẽ tự động xuống dòng
+- **Bố cục ngang (`horizontal`):** viết tên bước **thật ngắn** (2-3 từ), không dùng câu dài
+  - ✅ Đúng: `(Thu nhận ảnh)`, `(Trích xuất)`, `(Phân loại)`
+  - ❌ Sai: `(Thu nhận và tiền xử lý ảnh đầu vào)`, `(Trích xuất đặc trưng từ dữ liệu)`
+- **Bố cục dọc (`vertical`):** có thể viết dài hơn (tối đa 25-30 ký tự)
+
+---
+
+## 16. CHECKLIST TRƯỚC KHI XUẤT
 
 Trước khi xuất file Markdown, kiểm tra:
 
@@ -475,3 +688,7 @@ Trước khi xuất file Markdown, kiểm tra:
 - [ ] Có dòng trống trước/sau: heading, code block, bảng, list, blockquote
 - [ ] Không dùng HTML raw (trừ `<br>`)
 - [ ] Không dùng LaTeX commands không được hỗ trợ (xem mục 2.5)
+- [ ] Khối matrix dùng ngôn ngữ `matrix` với định dạng dữ liệu đúng
+- [ ] Khối chart dùng ngôn ngữ `chart` với `type:` được chỉ định
+- [ ] Khối graph dùng ngôn ngữ `graph` với ký hiệu cạnh hợp lệ
+- [ ] Khối workflow dùng ngôn ngữ `workflow` với ký hiệu bước đúng

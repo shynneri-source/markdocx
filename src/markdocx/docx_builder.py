@@ -33,6 +33,7 @@ from markdocx.styles import (
 )
 from markdocx.math_renderer import latex_to_omml, latex_to_omml_para
 from markdocx.code_renderer import add_code_block_to_doc
+from markdocx.diagram_renderer import is_diagram_language, render_diagram_to_doc
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +192,12 @@ class DocxBuilder:
         if token.info:
             language = token.info.strip().split()[0]
         code = token.content
-        add_code_block_to_doc(self.doc, code, language)
+
+        # Check if this is a diagram block (matrix, chart, graph, workflow)
+        if is_diagram_language(language):
+            render_diagram_to_doc(self.doc, code, language, self.image_max_width)
+        else:
+            add_code_block_to_doc(self.doc, code, language)
 
     def _handle_math_block(self, token):
         """Handle display math ($$...$$) block using native OMML."""
