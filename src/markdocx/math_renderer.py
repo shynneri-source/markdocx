@@ -98,6 +98,20 @@ def _omml_run(text):
     return r
 
 
+def _append_flattened(parent, child):
+    """Append child to parent, flattening nested oMath groups.
+    
+    Word doesn't support nested m:oMath inside m:oMath.
+    When a child is itself an oMath group (used as container for mrow etc.),
+    we flatten it by appending its children directly to the parent.
+    """
+    if _local(child.tag) == "oMath" and _local(parent.tag) == "oMath":
+        for sub in list(child):
+            parent.append(sub)
+    else:
+        parent.append(child)
+
+
 def _local(tag):
     """Strip namespace from tag."""
     if '}' in tag:
@@ -119,18 +133,98 @@ def _convert_mathml_element(elem):
         for child in elem:
             result = _convert_mathml_element(child)
             if result is not None:
-                omath.append(result)
+                _append_flattened(omath, result)
         return omath
 
     elif tag == "mrow":
-        # Group — just convert children sequentially
+        # Detect matrix pattern: mo(delimiter) + mtable + mo(delimiter)
+        # latex2mathml produces this for pmatrix, bmatrix, vmatrix, etc.
+        children = list(elem)
+        child_tags = [_local(c.tag) for c in children]
+
+        # Pattern 1: mo + mtable + mo  (pmatrix, bmatrix, vmatrix, Bmatrix, Vmatrix)
+        if child_tags == ["mo", "mtable", "mo"]:
+            open_delim = _get_text(children[0]) or "("
+            close_delim = _get_text(children[2]) or ")"
+            d = etree.Element(f"{{{_OMML_NS}}}d")
+            dPr = etree.SubElement(d, f"{{{_OMML_NS}}}dPr")
+            begChr = etree.SubElement(dPr, f"{{{_OMML_NS}}}begChr")
+            begChr.set(f"{{{_OMML_NS}}}val", open_delim)
+            endChr = etree.SubElement(dPr, f"{{{_OMML_NS}}}endChr")
+            endChr.set(f"{{{_OMML_NS}}}val", close_delim)
+            e_elem = etree.SubElement(d, f"{{{_OMML_NS}}}e")
+            mtable_omml = _convert_mathml_element(children[1])
+            if mtable_omml is not None:
+                e_elem.append(mtable_omml)
+            return d
+
+        # Pattern 2: mo + mtable  (cases — only opening delimiter)
+        if child_tags == ["mo", "mtable"]:
+            open_delim = _get_text(children[0]) or "{"
+            d = etree.Element(f"{{{_OMML_NS}}}d")
+            dPr = etree.SubElement(d, f"{{{_OMML_NS}}}dPr")
+            begChr = etree.SubElement(dPr, f"{{{_OMML_NS}}}begChr")
+            begChr.set(f"{{{_OMML_NS}}}val", open_delim)
+            endChr = etree.SubElement(dPr, f"{{{_OMML_NS}}}endChr")
+            endChr.set(f"{{{_OMML_NS}}}val", "")
+            e_elem = etree.SubElement(d, f"{{{_OMML_NS}}}e")
+            mtable_omml = _convert_mathml_element(children[1])
+            if mtable_omml is not None:
+                e_elem.append(mtable_omml)
+            return d
+
+        # Pattern 3: mixed content containing mo + mtable (e.g. I = (matrix))
+        # Detect mtable surrounded by mo delimiters within a larger mrow
+        mtable_idx = None
+        for i, t in enumerate(child_tags):
+            if t == "mtable":
+                mtable_idx = i
+                break
+
+        if mtable_idx is not None:
+            # Check for delimiter mo before and/or after the mtable
+            has_open = (mtable_idx > 0 and child_tags[mtable_idx - 1] == "mo")
+            has_close = (mtable_idx < len(child_tags) - 1 and child_tags[mtable_idx + 1] == "mo")
+
+            if has_open or has_close:
+                group = etree.Element(f"{{{_OMML_NS}}}oMath")
+                # Convert children before the opening delimiter
+                start = (mtable_idx - 1) if has_open else mtable_idx
+                for child in children[:start]:
+                    result = _convert_mathml_element(child)
+                    if result is not None:
+                        _append_flattened(group, result)
+
+                # Build the delimiter-wrapped matrix
+                open_delim = _get_text(children[mtable_idx - 1]) if has_open else ""
+                close_delim = _get_text(children[mtable_idx + 1]) if has_close else ""
+
+                d = etree.Element(f"{{{_OMML_NS}}}d")
+                dPr = etree.SubElement(d, f"{{{_OMML_NS}}}dPr")
+                begChr = etree.SubElement(dPr, f"{{{_OMML_NS}}}begChr")
+                begChr.set(f"{{{_OMML_NS}}}val", open_delim or "")
+                endChr_el = etree.SubElement(dPr, f"{{{_OMML_NS}}}endChr")
+                endChr_el.set(f"{{{_OMML_NS}}}val", close_delim or "")
+                e_elem = etree.SubElement(d, f"{{{_OMML_NS}}}e")
+                mtable_omml = _convert_mathml_element(children[mtable_idx])
+                if mtable_omml is not None:
+                    e_elem.append(mtable_omml)
+                group.append(d)
+
+                # Convert children after the closing delimiter
+                end = (mtable_idx + 2) if has_close else (mtable_idx + 1)
+                for child in children[end:]:
+                    result = _convert_mathml_element(child)
+                    if result is not None:
+                        _append_flattened(group, result)
+                return group
+
+        # Default: group — just convert children sequentially
         group = etree.Element(f"{{{_OMML_NS}}}oMath")
-        for child in elem:
+        for child in children:
             result = _convert_mathml_element(child)
             if result is not None:
-                group.append(result)
-        # If wrapping in oMath is redundant, return children directly
-        # We'll use a dummy wrapper and extract later
+                _append_flattened(group, result)
         return group
 
     elif tag in ("mi", "mn", "mo", "mtext"):
@@ -376,7 +470,7 @@ def _convert_mathml_element(elem):
                         for cell_child in cell_elem:
                             result = _convert_mathml_element(cell_child)
                             if result is not None:
-                                e_elem.append(result)
+                                _append_flattened(e_elem, result)
                         # If mtd has direct text
                         if cell_elem.text and cell_elem.text.strip():
                             e_elem.append(_omml_run(cell_elem.text.strip()))
@@ -391,7 +485,7 @@ def _convert_mathml_element(elem):
         for child in elem:
             result = _convert_mathml_element(child)
             if result is not None:
-                group.append(result)
+                _append_flattened(group, result)
         return group
 
     elif tag == "mstyle":
@@ -400,7 +494,7 @@ def _convert_mathml_element(elem):
         for child in elem:
             result = _convert_mathml_element(child)
             if result is not None:
-                group.append(result)
+                _append_flattened(group, result)
         return group
 
     elif tag == "menclose":
@@ -409,7 +503,7 @@ def _convert_mathml_element(elem):
         for child in elem:
             result = _convert_mathml_element(child)
             if result is not None:
-                group.append(result)
+                _append_flattened(group, result)
         return group
 
     else:
@@ -420,7 +514,7 @@ def _convert_mathml_element(elem):
         for child in elem:
             result = _convert_mathml_element(child)
             if result is not None:
-                group.append(result)
+                _append_flattened(group, result)
         if len(group):
             return group
         return None
