@@ -211,7 +211,10 @@ class DocxBuilder:
             para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             para.paragraph_format.space_before = Pt(6)
             para.paragraph_format.space_after = Pt(6)
-            para._element.append(omml_para)
+            # Wrap OMML in a w:r to ensure valid paragraph XML
+            run_el = OxmlElement("w:r")
+            run_el.append(omml_para)
+            para._element.append(run_el)
         else:
             # Fallback: show raw LaTeX in code font
             para = self.doc.add_paragraph()
@@ -564,7 +567,10 @@ class DocxBuilder:
                 latex_str = child.content.strip()
                 omml = latex_to_omml(latex_str)
                 if omml is not None:
-                    paragraph._element.append(omml)
+                    # Wrap OMML in a run to avoid invalid paragraph XML
+                    run_el = OxmlElement("w:r")
+                    run_el.append(omml)
+                    paragraph._element.append(run_el)
                 else:
                     # Fallback: show as styled text
                     run = paragraph.add_run(f"${latex_str}$")
@@ -579,7 +585,9 @@ class DocxBuilder:
                 latex_str = child.content.strip()
                 omml = latex_to_omml(latex_str)
                 if omml is not None:
-                    paragraph._element.append(omml)
+                    run_el = OxmlElement("w:r")
+                    run_el.append(omml)
+                    paragraph._element.append(run_el)
                 else:
                     run = paragraph.add_run(f"$${latex_str}$$")
                     run.font.name = FONT_CODE

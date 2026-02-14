@@ -58,14 +58,62 @@ def latex_to_mathml(latex_str):
         return None
 
 
+# ── Try to load Microsoft's MML2OMML.XSL for best-quality conversion ────
+_MS_XSLT_TRANSFORM = None
+_MS_XSLT_PATHS = [
+    r"C:\Program Files\Microsoft Office\root\Office16\MML2OMML.XSL",
+    r"C:\Program Files (x86)\Common Files\microsoft shared\EQUATION\MML2OMML.XSL",
+    r"C:\Program Files\Microsoft Office\Office16\MML2OMML.XSL",
+    r"C:\Program Files\Common Files\microsoft shared\EQUATION\MML2OMML.XSL",
+]
+
+def _load_ms_xslt():
+    """Try to load Microsoft's MML2OMML.XSL transform (once)."""
+    global _MS_XSLT_TRANSFORM
+    if _MS_XSLT_TRANSFORM is not None:
+        return _MS_XSLT_TRANSFORM
+    import os
+    for path in _MS_XSLT_PATHS:
+        if os.path.isfile(path):
+            try:
+                xslt_tree = etree.parse(path)
+                _MS_XSLT_TRANSFORM = etree.XSLT(xslt_tree)
+                logger.info(f"Loaded Microsoft MML2OMML.XSL from {path}")
+                return _MS_XSLT_TRANSFORM
+            except Exception as e:
+                logger.debug(f"Failed to load XSLT from {path}: {e}")
+    _MS_XSLT_TRANSFORM = False  # Mark as unavailable
+    return False
+
+
+def _mathml_to_omml_xslt(mathml_str):
+    """Convert MathML to OMML using Microsoft's official XSLT (if available)."""
+    transform = _load_ms_xslt()
+    if not transform:
+        return None
+    try:
+        if 'xmlns' not in mathml_str:
+            mathml_str = mathml_str.replace('<math>', f'<math xmlns="{_MATHML_NS}">')
+        mathml_tree = etree.fromstring(mathml_str.encode('utf-8'))
+        result = transform(mathml_tree)
+        return result.getroot()
+    except Exception as e:
+        logger.debug(f"MS XSLT conversion failed: {e}")
+        return None
+
+
 def _mathml_to_omml(mathml_str):
     """
     Convert MathML XML string to OMML (Office Math Markup Language) element.
-    Uses a direct conversion approach since lxml XSLT with Microsoft's
-    MML2OMML.xsl requires the full file.
-
-    We use a simplified but robust recursive converter.
+    Uses Microsoft's MML2OMML.XSL if available on the system,
+    otherwise falls back to our custom recursive converter.
     """
+    # Try Microsoft's XSLT first (produces best results)
+    result = _mathml_to_omml_xslt(mathml_str)
+    if result is not None:
+        return result
+
+    # Fallback: custom converter
     try:
         # Parse the MathML
         # latex2mathml output may have namespace declaration
@@ -447,6 +495,11 @@ def _convert_mathml_element(elem):
         # Matrix/table
         m = etree.Element(f"{{{_OMML_NS}}}m")
         mPr = etree.SubElement(m, f"{{{_OMML_NS}}}mPr")
+        # baseJc and plcHide are required for proper rendering
+        baseJc = etree.SubElement(mPr, f"{{{_OMML_NS}}}baseJc")
+        baseJc.set(f"{{{_OMML_NS}}}val", "center")
+        plcHide = etree.SubElement(mPr, f"{{{_OMML_NS}}}plcHide")
+        plcHide.set(f"{{{_OMML_NS}}}val", "on")
         # Count columns from first row
         first_row = elem.find(f"{{{_MATHML_NS}}}mtr")
         if first_row is None:
